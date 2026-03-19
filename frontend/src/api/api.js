@@ -2,15 +2,9 @@ import api from './client'
 
 // ── Auth ──────────────────────────────────────────────────────────
 export const authAPI = {
-  // Register (2-step with OTP)
-  registerSendOTP:    (data)          => api.post('/auth/register/send-otp', data),
-  registerVerify:     (data)          => api.post('/auth/register/verify-otp', data),
-  registerResendOTP:  (email)         => api.post('/auth/register/resend-otp', { email }),
-
-  // Login (direct — no OTP)
-  login:              (data)          => api.post('/auth/login', data),
-
-  me:                 ()              => api.get('/auth/me'),
+  register: (data) => api.post('/auth/register', data),
+  login:    (data) => api.post('/auth/login', data),
+  me:       ()     => api.get('/auth/me'),
 }
 
 // ── Admin ─────────────────────────────────────────────────────────
