@@ -1,0 +1,119 @@
+{
+  "questions": [
+    {
+      "question_type": "mcq",
+      "question_text": "What is the time complexity of searching an element in a balanced Binary Search Tree (BST) with n nodes?",
+      "options": ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
+      "correct_answer": "B",
+      "marks": 1,
+      "negative_marks": 0.33,
+      "subject": "Data Structures",
+      "topic": "Trees"
+    },
+    {
+      "question_type": "mcq",
+      "question_text": "Which of the following is NOT a property of a relational database?",
+      "options": [
+        "Data is stored in tables",
+        "Each row is uniquely identified by a primary key",
+        "Data is stored in a hierarchical format",
+        "Tables can be joined using common attributes"
+      ],
+      "correct_answer": "C",
+      "marks": 1,
+      "negative_marks": 0.33,
+      "subject": "DBMS",
+      "topic": "Relational Model"
+    },
+    {
+      "question_type": "mcq",
+      "question_text": "In which of the following page replacement algorithms does the OS keep track of the last time each page was used?",
+      "options": ["FIFO", "Optimal", "LRU", "Clock"],
+      "correct_answer": "C",
+      "marks": 2,
+      "negative_marks": 0.67,
+      "subject": "Operating Systems",
+      "topic": "Memory Management"
+    },
+    {
+      "question_type": "msq",
+      "question_text": "Which of the following are valid properties of a process in the ready state? (Select all that apply)",
+      "options": [
+        "It is waiting for CPU allocation",
+        "It has all necessary resources except the CPU",
+        "It is currently executing on the CPU",
+        "It can be scheduled by the OS at any time"
+      ],
+      "correct_answer": "A,B,D",
+      "marks": 2,
+      "negative_marks": 0,
+      "subject": "Operating Systems",
+      "topic": "Process Management"
+    },
+    {
+      "question_type": "msq",
+      "question_text": "Which of the following protocols operate at the Transport Layer of the OSI model?",
+      "options": ["TCP", "UDP", "IP", "HTTP"],
+      "correct_answer": "A,B",
+      "marks": 2,
+      "negative_marks": 0,
+      "subject": "Computer Networks",
+      "topic": "OSI Model"
+    },
+    {
+      "question_type": "nat",
+      "question_text": "A process arrives at time 0 with burst time 8ms. Using Round Robin scheduling with a time quantum of 3ms, how many times will the process be scheduled before completion?",
+      "options": [],
+      "correct_answer": "3",
+      "marks": 2,
+      "negative_marks": 0,
+      "subject": "Operating Systems",
+      "topic": "CPU Scheduling"
+    },
+    {
+      "question_type": "nat",
+      "question_text": "The number of distinct binary trees that can be formed with 4 nodes is ___.",
+      "options": [],
+      "correct_answer": "14",
+      "marks": 2,
+      "negative_marks": 0,
+      "subject": "Data Structures",
+      "topic": "Trees"
+    },
+    {
+      "question_type": "mcq",
+      "question_text": "Which normal form deals with multivalued dependencies?",
+      "options": ["1NF", "2NF", "3NF", "4NF"],
+      "correct_answer": "D",
+      "marks": 1,
+      "negative_marks": 0.33,
+      "subject": "DBMS",
+      "topic": "Normalization"
+    },
+    {
+      "question_type": "mcq",
+      "question_text": "What does the 'volatile' keyword guarantee in C?",
+      "options": [
+        "The variable is stored in a register",
+        "The variable will not be optimized by the compiler",
+        "The variable is thread-safe",
+        "The variable is stored in the heap"
+      ],
+      "correct_answer": "B",
+      "marks": 1,
+      "negative_marks": 0.33,
+      "subject": "Programming in C",
+      "topic": "Keywords"
+    },
+    {
+      "question_type": "nat",
+      "question_text": "A subnet has IP address 192.168.1.0/26. What is the maximum number of usable host addresses in this subnet?",
+      "options": [],
+      "correct_answer": "62",
+      "marks": 2,
+      "negative_marks": 0,
+      "subject": "Computer Networks",
+      "topic": "Subnetting"
+    }
+  ]
+}
