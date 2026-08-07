@@ -3,14 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="description" content="GATE Prep Platform - Comprehensive test series and analytics for GATE aspirants." />
     <title>GATE Prep Platform</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <script>
+      (() => {
+        const theme = localStorage.getItem('theme') || 'dark'
+        document.documentElement.dataset.theme = theme
+        document.documentElement.style.colorScheme = theme
+      })()
+    </script>
+    <!-- Preload critical fonts (Latin subset, above-the-fold weights) -->
+    <link rel="preload" href="/fonts/dm-sans-1.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="preload" href="/fonts/syne-5.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

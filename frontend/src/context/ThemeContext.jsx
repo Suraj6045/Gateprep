@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
 
 const ThemeContext = createContext(null)
 
@@ -7,13 +7,15 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
+    document.documentElement.style.colorScheme = theme
     localStorage.setItem('theme', theme)
   }, [theme])
 
-  const toggle = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
+  const toggle = useCallback(() => setTheme((currentTheme) => currentTheme === 'dark' ? 'light' : 'dark'), [])
+  const value = useMemo(() => ({ theme, toggle }), [theme, toggle])
 
   return (
-    <ThemeContext.Provider value={{ theme, toggle }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   )

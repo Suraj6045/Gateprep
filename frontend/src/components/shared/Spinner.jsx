@@ -13,10 +13,10 @@ export default function Spinner({ size = 24, className = '' }) {
 
 export function PageLoader() {
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
       <div className="flex flex-col items-center gap-4">
-        <Spinner size={40} className="text-sky-500" />
-        <p className="text-slate-400 text-sm">Loading...</p>
+        <Spinner size={40} className="text-primary" />
+        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Loading...</p>
       </div>
     </div>
   )

@@ -1,9 +1,17 @@
-import { useState, useCallback } from 'react'
-import { X } from 'lucide-react'
+import { useEffect, useRef, useState, useCallback } from 'react'
+import X from 'lucide-react/dist/esm/icons/x'
+import { DEG_TO_RAD, isOperatorTail, tokenizeExpression, formatResult, evaluateExpression, SCIENTIFIC_FUNCTIONS, SCIENTIFIC_CONSTANTS } from '../../utils/calculatorEngine'
 
-const DEG_TO_RAD = Math.PI / 180
+const Btn = ({ label, onClick, type = 'default', wide = false }) => (
+  <button onClick={onClick}
+    className={`calc-btn ${type === 'op' ? 'calc-btn-op' : type === 'eq' ? 'calc-btn-eq' : type === 'clear' ? 'calc-btn-clear' : type === 'back' ? 'calc-btn-backspace' : ''} ${wide ? 'col-span-2' : ''}`}>
+    {label}
+  </button>
+)
 
 export default function Calculator({ onClose }) {
+  const dialogRef = useRef(null)
+  const expressionRef = useRef('')
   const [display, setDisplay] = useState('0')
   const [expression, setExpression] = useState('')
   const [memory, setMemory] = useState(0)
@@ -11,6 +19,17 @@ export default function Calculator({ onClose }) {
   const [waitingForOperand, setWaitingForOperand] = useState(false)
 
   const getAngle = (val) => isDeg ? val * DEG_TO_RAD : val
+
+  const setExpressionText = useCallback((next) => {
+    const value = typeof next === 'function' ? next(expressionRef.current) : next
+    expressionRef.current = value
+    setExpression(value)
+  }, [])
+
+  useEffect(() => {
+    const firstButton = dialogRef.current?.querySelector('button')
+    firstButton?.focus()
+  }, [])
 
   const inputDigit = (digit) => {
     if (waitingForOperand) {
@@ -27,97 +46,117 @@ export default function Calculator({ onClose }) {
   }
 
   const handleOperator = (op) => {
-    const val = parseFloat(display)
-    setExpression(`${display} ${op}`)
+    setExpressionText(prev => {
+      const trimmed = prev.trim()
+      if (!trimmed) return `${display} ${op}`
+      if (isOperatorTail(trimmed)) return `${trimmed.slice(0, trimmed.lastIndexOf(' ')).trim()} ${op}`
+      if (trimmed.endsWith(')')) return `${trimmed} ${op}`
+      return `${trimmed} ${display} ${op}`
+    })
     setWaitingForOperand(true)
   }
 
+  const inputOpenParen = () => {
+    setExpressionText(prev => {
+      const trimmed = prev.trim()
+      if (!trimmed) return '('
+      if (isOperatorTail(trimmed) || trimmed.endsWith('(')) return `${trimmed} (`
+      return `${trimmed} ${display} × (`
+    })
+    setDisplay('0')
+    setWaitingForOperand(true)
+  }
+
+  const inputCloseParen = () => {
+    const tokens = tokenizeExpression(expressionRef.current)
+    const openCount = tokens.filter(token => token === '(').length
+    const closeCount = tokens.filter(token => token === ')').length
+    if (openCount <= closeCount) return
+
+    setExpressionText(prev => {
+      const trimmed = prev.trim()
+      if (!trimmed || trimmed.endsWith('(')) return trimmed
+      if (trimmed.endsWith(')')) return `${trimmed} )`
+      return `${trimmed} ${display} )`
+    })
+    setWaitingForOperand(false)
+  }
+
   const calculate = () => {
-    if (!expression) return
+    if (!expressionRef.current) return
     try {
-      const parts = expression.trim().split(' ')
-      const left = parseFloat(parts[0])
-      const op = parts[1]
-      const right = parseFloat(display)
-      let result
-      switch (op) {
-        case '+': result = left + right; break
-        case '-': result = left - right; break
-        case '×': result = left * right; break
-        case '÷': result = right !== 0 ? left / right : 'Error'; break
-        case 'xʸ': result = Math.pow(left, right); break
-        case '%': result = left % right; break
-        default: result = right
-      }
-      setDisplay(String(parseFloat(result.toFixed(10))))
-      setExpression('')
+      const trimmed = expressionRef.current.trim()
+      const finalExpression = trimmed.endsWith(')') ? trimmed : `${trimmed} ${display}`
+      setDisplay(formatResult(evaluateExpression(finalExpression)))
+      setExpressionText('')
       setWaitingForOperand(true)
     } catch { setDisplay('Error') }
   }
 
   const sciFunc = (fn) => {
-    const val = parseFloat(display)
-    let result
+    if (fn in SCIENTIFIC_CONSTANTS) {
+      setDisplay(String(SCIENTIFIC_CONSTANTS[fn]))
+      return
+    }
+
+    const compute = SCIENTIFIC_FUNCTIONS[fn]
+    if (!compute) return
+
     try {
-      switch (fn) {
-        case 'sin':   result = Math.sin(getAngle(val)); break
-        case 'cos':   result = Math.cos(getAngle(val)); break
-        case 'tan':   result = Math.tan(getAngle(val)); break
-        case 'sin⁻¹': result = isDeg ? Math.asin(val) / DEG_TO_RAD : Math.asin(val); break
-        case 'cos⁻¹': result = isDeg ? Math.acos(val) / DEG_TO_RAD : Math.acos(val); break
-        case 'tan⁻¹': result = isDeg ? Math.atan(val) / DEG_TO_RAD : Math.atan(val); break
-        case 'log':   result = Math.log10(val); break
-        case 'ln':    result = Math.log(val); break
-        case 'log₂':  result = Math.log2(val); break
-        case '√':     result = Math.sqrt(val); break
-        case 'x²':    result = val * val; break
-        case 'x³':    result = val * val * val; break
-        case '1/x':   result = 1 / val; break
-        case 'n!':    result = factorial(val); break
-        case 'eˣ':    result = Math.exp(val); break
-        case '10ˣ':   result = Math.pow(10, val); break
-        case '|x|':   result = Math.abs(val); break
-        case 'π':     setDisplay(String(Math.PI)); return
-        case 'e':     setDisplay(String(Math.E)); return
-        default: return
-      }
-      setDisplay(String(parseFloat(result.toFixed(10))))
+      setDisplay(formatResult(compute(parseFloat(display), isDeg)))
       setWaitingForOperand(true)
-    } catch { setDisplay('Error') }
+    } catch { 
+      setDisplay('Error') 
+    }
   }
 
-  const factorial = (n) => {
-    if (n < 0 || !Number.isInteger(n)) return NaN
-    if (n === 0 || n === 1) return 1
-    let r = 1; for (let i = 2; i <= n; i++) r *= i; return r
-  }
-
-  const clear = () => { setDisplay('0'); setExpression(''); setWaitingForOperand(false) }
+  const clear = () => { setDisplay('0'); setExpressionText(''); setWaitingForOperand(false) }
   const backspace = () => { setDisplay(display.length > 1 ? display.slice(0, -1) : '0') }
   const toggleSign = () => setDisplay(String(parseFloat(display) * -1))
 
-  const Btn = ({ label, onClick, type = 'default', wide = false }) => (
-    <button onClick={onClick}
-      className={`calc-btn ${type === 'op' ? 'calc-btn-op' : type === 'eq' ? 'calc-btn-eq' : type === 'clear' ? 'calc-btn-clear' : type === 'back' ? 'calc-btn-backspace' : ''} ${wide ? 'col-span-2' : ''}`}>
-      {label}
-    </button>
-  )
+  const handleDialogKeyDown = useCallback((event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      onClose()
+      return
+    }
+
+    if (event.key !== 'Tab') return
+
+    const focusable = Array.from(
+      dialogRef.current?.querySelectorAll('button:not([disabled])') || []
+    )
+    if (focusable.length === 0) return
+
+    const first = focusable[0]
+    const last = focusable.at(-1)
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first.focus()
+    }
+  }, [onClose])
 
   return (
-    <div className="fixed z-50 shadow-2xl rounded-lg overflow-hidden select-none"
-         style={{ top: '70px', right: '16px', width: '320px', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+    <div ref={dialogRef}
+         className="fixed z-50 shadow-2xl rounded-lg overflow-hidden select-none sm:w-[320px] left-4 right-4 sm:left-auto sm:right-4"
+         role="dialog" aria-modal="true" aria-labelledby="calculator-title"
+         onKeyDown={handleDialogKeyDown}
+         style={{ top: '70px', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b"
            style={{ background: 'var(--bg-panel)', borderColor: 'var(--border)' }}>
-        <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Scientific Calculator</span>
+        <span id="calculator-title" className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Scientific Calculator</span>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-muted)' }}>
             <button onClick={() => setIsDeg(true)}
-              className={`px-2 py-0.5 rounded ${isDeg ? 'bg-sky-600 text-white' : ''}`}>Deg</button>
+              className={`px-2 py-0.5 rounded ${isDeg ? 'bg-primary text-white' : ''}`}>Deg</button>
             <button onClick={() => setIsDeg(false)}
-              className={`px-2 py-0.5 rounded ${!isDeg ? 'bg-sky-600 text-white' : ''}`}>Rad</button>
+              className={`px-2 py-0.5 rounded ${!isDeg ? 'bg-primary text-white' : ''}`}>Rad</button>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-200"><X size={16} /></button>
+          <button onClick={onClose} aria-label="Close Calculator" className="text-muted-foreground hover:text-foreground"><X size={16} /></button>
         </div>
       </div>
 
@@ -148,7 +187,7 @@ export default function Calculator({ onClose }) {
           'x²','x³','√','10ˣ','1/x',
           'n!','|x|','π','e','%'].map(fn => (
           <button key={fn} onClick={() => sciFunc(fn)}
-            className="calc-btn text-xs h-8" style={{ background: '#0f2850', color: '#7dd3fc' }}>{fn}</button>
+            className="calc-btn text-xs h-8" style={{ background: 'var(--bg-panel)', color: 'var(--brand-light)' }}>{fn}</button>
         ))}
       </div>
 
@@ -164,13 +203,13 @@ export default function Calculator({ onClose }) {
         <Btn label="8" onClick={() => inputDigit('8')} />
         <Btn label="9" onClick={() => inputDigit('9')} />
         <Btn label="×" onClick={() => handleOperator('×')} type="op" />
-        <Btn label="(" onClick={() => {}} />
+        <Btn label="(" onClick={inputOpenParen} />
 
         <Btn label="4" onClick={() => inputDigit('4')} />
         <Btn label="5" onClick={() => inputDigit('5')} />
         <Btn label="6" onClick={() => inputDigit('6')} />
         <Btn label="-" onClick={() => handleOperator('-')} type="op" />
-        <Btn label=")" onClick={() => {}} />
+        <Btn label=")" onClick={inputCloseParen} />
 
         <Btn label="1" onClick={() => inputDigit('1')} />
         <Btn label="2" onClick={() => inputDigit('2')} />
