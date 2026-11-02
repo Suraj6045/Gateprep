@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ payload.test_title }} — Result Report</title>
+  <style>
+    /* ── Self-contained KaTeX Styles ── */
+    {{ katex_css | safe }}
+
+    /* ── Self-contained Branded Fonts (Syne, DM Sans, JetBrains Mono) ── */
+    {{ fonts_css | safe }}
+
+    /* ── Theme and Layout ── */
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --card-border: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --primary: #0284c7;
+      --primary-tint: #e0f2fe;
+      --success: #16a34a;
+      --success-tint: #f0fdf4;
+      --success-border: #bbf7d0;
+      --danger: #dc2626;
+      --danger-tint: #fef2f2;
+      --danger-border: #fecaca;
+      --warning: #d97706;
+      --warning-tint: #fffbeb;
+      --warning-border: #fde68a;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      line-height: 1.55;
+      padding: 36px 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    h1, h2, h3, .font-heading {
+      font-family: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ── Header ── */
+    .report-header {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 24px 28px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.05em;
+      color: var(--primary);
+      text-transform: uppercase;
+    }
+
+    .attempt-pill {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      background: var(--primary-tint);
+      color: var(--primary);
+      border: 1px solid #bae6fd;
+    }
+
+    .attempt-pill.leaderboard {
+      background: var(--warning-tint);
+      color: var(--warning);
+      border-color: var(--warning-border);
+    }
+
+    .report-title {
+      font-size: 26px;
+      color: var(--text-main);
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+
+    .report-meta {
+      font-size: 13px;
+      color: var(--text-muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    /* ── Metrics Grid ── */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .metric-card {
+      background: #f8fafc;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      text-align: center;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    .metric-val {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .metric-val.score { color: var(--primary); }
+    .metric-val.correct { color: var(--success); }
+    .metric-val.incorrect { color: var(--danger); }
+    .metric-val.skipped { color: var(--text-muted); }
+
+    /* ── Topper Comparison ── */
+    .topper-section {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .topper-title {
+      font-size: 16px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .topper-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .topper-grid { grid-template-columns: 1fr; }
+    }
+
+    .comparison-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      background: #f8fafc;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--card-border);
+      font-size: 13px;
+    }
+
+    /* ── Section Title ── */
+    .section-heading {
+      font-size: 18px;
+      margin: 32px 0 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .section-heading span {
+      font-size: 13px;
+      font-weight: normal;
+      color: var(--text-muted);
+    }
+
+    /* ── Question Card ── */
+    .question-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .q-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .q-number-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .q-num {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .status-badge {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+    }
+
+    .status-badge.correct {
+      background: var(--success-tint);
+      color: var(--success);
+      border: 1px solid var(--success-border);
+    }
+
+    .status-badge.incorrect {
+      background: var(--danger-tint);
+      color: var(--danger);
+      border: 1px solid var(--danger-border);
+    }
+
+    .status-badge.skipped {
+      background: #f1f5f9;
+      color: var(--text-muted);
+      border: 1px solid #e2e8f0;
+    }
+
+    .q-marks-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .marks-awarded {
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .marks-awarded.pos { color: var(--success); }
+    .marks-awarded.neg { color: var(--danger); }
+    .marks-awarded.zero { color: var(--text-muted); }
+
+    .q-text {
+      font-size: 15px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+      color: var(--text-main);
+    }
+
+    .q-image, .opt-image {
+      max-width: 100%;
+      height: auto;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--card-border);
+      margin: 10px 0;
+      display: block;
+    }
+
+    /* ── Options List ── */
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    @media (min-width: 640px) {
+      .options-grid.two-col {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .option-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--card-border);
+      background: #ffffff;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .option-letter {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 13px;
+      min-width: 20px;
+    }
+
+    .option-content {
+      flex: 1;
+    }
+
+    .option-item.is-correct {
+      background: var(--success-tint);
+      border-color: var(--success-border);
+      color: #14532d;
+    }
+
+    .option-item.is-selected-wrong {
+      background: var(--danger-tint);
+      border-color: var(--danger-border);
+      color: #7f1d1d;
+    }
+
+    .option-marker {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .option-marker.badge-correct {
+      background: #bbf7d0;
+      color: #15803d;
+    }
+
+    .option-marker.badge-wrong {
+      background: #fecaca;
+      color: #b91c1c;
+    }
+
+    .option-marker.badge-topper {
+      background: var(--warning-tint);
+      color: var(--warning);
+      border: 1px solid var(--warning-border);
+    }
+
+    /* ── NAT Answer Box ── */
+    .nat-comparison {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+      font-size: 13px;
+    }
+
+    .nat-box {
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--card-border);
+      background: #f8fafc;
+    }
+
+    .nat-box.correct-box {
+      background: var(--success-tint);
+      border-color: var(--success-border);
+      color: #14532d;
+    }
+
+    .nat-box.user-box {
+      background: #f8fafc;
+    }
+
+    .nat-box.user-box.wrong {
+      background: var(--danger-tint);
+      border-color: var(--danger-border);
+      color: #7f1d1d;
+    }
+
+    .q-footer-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px solid #f1f5f9;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* ── Report Footer ── */
+    .report-footer {
+      text-align: center;
+      padding: 24px 0 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* ── Print Styles ── */
+    @page {
+      size: A4;
+      margin: 2cm;
+    }
+
+    @media print {
+      body {
+        background-color: #ffffff;
+        padding: 0;
+        color: #000000;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      .report-header, .question-card, .topper-section {
+        box-shadow: none !important;
+        border: 1px solid #cbd5e1 !important;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      .option-item {
+        border: 1px solid #cbd5e1 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="report-header">
+      <div class="header-top">
+        <div class="brand-badge">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+          Gateprep Result Report
+        </div>
+      </div>
+
+      <h1 class="report-title">{{ payload.test_title }}</h1>
+
+      <div class="report-meta">
+        {% if payload.submitted_at %}
+        <div><strong>Submitted:</strong> {{ payload.submitted_at | format_datetime }}</div>
+        {% endif %}
+        <div><strong>Total Questions:</strong> {{ payload.answers | length }}</div>
+        {% if payload.rank %}
+        <div><strong>Rank:</strong> #{{ payload.rank }} / {{ payload.total_participants }}</div>
+        {% endif %}
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">Score</div>
+          <div class="metric-val score">{{ "%.2f"|format(payload.score) }} / {{ payload.total_marks }}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Percentage</div>
+          <div class="metric-val">{{ payload.percentage | round(1) }}%</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Correct</div>
+          <div class="metric-val correct">{{ payload.correct }}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Wrong</div>
+          <div class="metric-val incorrect">{{ payload.incorrect }}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Skipped</div>
+          <div class="metric-val skipped">{{ payload.skipped }}</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Topper Comparison Section (if present) -->
+    {% if payload.topper %}
+    <section class="topper-section">
+      <h2 class="topper-title font-heading">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+          <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+          <path d="M4 22h16"/>
+          <path d="M10 14.66V17c0 .55-.45 1-1 1H7v4h10v-4h-2c-.55 0-1-.45-1-1v-2.34"/>
+          <path d="M6 9a6 6 0 0 0 12 0V4H6v5z"/>
+        </svg>
+        Topper Comparison
+      </h2>
+      <div class="topper-grid">
+        <div class="comparison-row">
+          <span>Your Performance</span>
+          <strong>{{ "%.2f"|format(payload.score) }} ({{ payload.percentage | round(1) }}%)</strong>
+        </div>
+        <div class="comparison-row">
+          <span>Topper</span>
+          <strong style="color: var(--warning)">{{ "%.2f"|format(payload.topper.score) }} ({{ payload.topper.percentage | round(1) }}%)</strong>
+        </div>
+      </div>
+    </section>
+    {% endif %}
+
+    <!-- Per-Question Review -->
+    <div class="section-heading">
+      <h2 class="font-heading">Detailed Question Review</h2>
+      <span>{{ payload.answers | length }} questions</span>
+    </div>
+
+    {% for ans in payload.answers %}
+    {% set is_correct = ans.is_correct %}
+    {% set status_class = 'correct' if is_correct == true else ('incorrect' if is_correct == false else 'skipped') %}
+    {% set status_label = 'Correct' if is_correct == true else ('Wrong' if is_correct == false else 'Skipped') %}
+
+    <article class="question-card">
+      <div class="q-header">
+        <div class="q-number-box">
+          <span class="q-num">Q{{ loop.index }}</span>
+          <span class="status-badge {{ status_class }}">{{ status_label }}</span>
+          <span style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">
+            {{ ans.question_type | upper }}
+          </span>
+        </div>
+        <div class="q-marks-meta">
+          <span>Marks: +{{ ans.marks }}{% if ans.negative_marks %} / -{{ ans.negative_marks }}{% endif %}</span>
+          <span class="marks-awarded {{ 'pos' if ans.marks_awarded > 0 else ('neg' if ans.marks_awarded < 0 else 'zero') }}">
+            Awarded: {{ '+' if ans.marks_awarded > 0 else '' }}{{ "%.2f"|format(ans.marks_awarded) }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Question Text -->
+      <div class="q-text">
+        {{ ans.question_text }}
+      </div>
+
+      <!-- Question Image -->
+      {% if ans.question_image_url %}
+      <img src="{{ ans.question_image_url }}" alt="Question {{ loop.index }} Illustration" class="q-image" />
+      {% endif %}
+
+      <!-- Options (MCQ / MSQ) -->
+      {% if ans.options and ans.options | length > 0 %}
+      <div class="options-grid {{ 'two-col' if ans.options | length <= 4 else '' }}">
+        {% for opt in ans.options %}
+        {% set letter = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[loop.index0] %}
+        {% set opt_is_correct = ans.correct_answer and letter in ans.correct_answer %}
+        {% set opt_is_selected = ans.selected_answer and letter in ans.selected_answer %}
+        {% set opt_is_topper = ans.topper_answer and letter in ans.topper_answer %}
+        {% set opt_class = 'is-correct' if opt_is_correct else ('is-selected-wrong' if opt_is_selected and not opt_is_correct else '') %}
+
+        <div class="option-item {{ opt_class }}">
+          <span class="option-letter">{{ letter }}.</span>
+          <div class="option-content">
+            <div>{{ opt }}</div>
+            {% if ans.option_images and ans.option_images[loop.index0] %}
+            <img src="{{ ans.option_images[loop.index0] }}" alt="Option {{ letter }}" class="opt-image" />
+            {% endif %}
+          </div>
+          <div>
+            {% if opt_is_correct %}
+            <span class="option-marker badge-correct">✓ Correct</span>
+            {% endif %}
+            {% if opt_is_selected and not opt_is_correct %}
+            <span class="option-marker badge-wrong">✗ Your Pick</span>
+            {% elif opt_is_selected and opt_is_correct %}
+            <span class="option-marker badge-correct">★ Your Pick</span>
+            {% endif %}
+            {% if opt_is_topper and not opt_is_selected and not opt_is_correct %}
+            <span class="option-marker badge-topper">Topper</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- NAT Answer View -->
+      {% if ans.question_type == 'nat' %}
+      <div class="nat-comparison">
+        <div class="nat-box correct-box">
+          <strong>✓ Correct Answer:</strong>
+          <span class="font-mono" style="margin-left: 6px; font-weight: 700;">{{ ans.correct_answer }}</span>
+        </div>
+        <div class="nat-box user-box {{ 'wrong' if is_correct == false else '' }}">
+          <strong>Your Answer:</strong>
+          <span class="font-mono" style="margin-left: 6px; font-weight: 700;">{{ ans.selected_answer if ans.selected_answer is not none and ans.selected_answer != '' else 'Skipped' }}</span>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Question Footer Meta -->
+      <div class="q-footer-meta">
+        <div>⏱ <strong>Time Spent:</strong> {{ ans.time_spent_seconds or 0 }}s</div>
+        {% if ans.topper_time_seconds and ans.topper_time_seconds > 0 %}
+        <div>🏆 <strong>Topper Time:</strong> {{ ans.topper_time_seconds }}s</div>
+        {% endif %}
+        {% if ans.topper_answer and ans.question_type == 'nat' %}
+        <div>🏆 <strong>Topper Answer:</strong> <span class="font-mono">{{ ans.topper_answer }}</span></div>
+        {% endif %}
+      </div>
+    </article>
+    {% endfor %}
+
+    <!-- Footer -->
+    <footer class="report-footer">
+      <p>Generated by Gateprep on {{ generated_at }}</p>
+    </footer>
+  </div>
+
+  <!-- Inlined KaTeX JS & Auto-render scripts -->
+  <script>
+  {{ katex_js | safe }}
+  </script>
+  <script>
+  {{ katex_autorender_js | safe }}
+  </script>
+  <script>
+    (function() {
+      function renderMath() {
+        if (typeof renderMathInElement === 'function') {
+          renderMathInElement(document.body, {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '\\[', right: '\\]', display: true },
+              { left: '$', right: '$', display: false },
+              { left: '\\(', right: '\\)', display: false }
+            ],
+            throwOnError: false
+          });
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', renderMath);
+      } else {
+        renderMath();
+      }
+    })();
+  </script>
+</body>
+</html>

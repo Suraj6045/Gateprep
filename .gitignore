@@ -13,10 +13,14 @@ frontend/.env
 # Uploads
 backend/uploads/
 
+# Local SQLite databases
+backend/*.db
+
 # Node
 frontend/node_modules/
 frontend/dist/
 frontend/.cache/
+frontend/openapi.json
 
 # OS
 .DS_Store
@@ -30,3 +34,25 @@ Thumbs.db
 
 # Logs
 *.log
+
+#skills
+.agent/
+.agents/
+skills-lock.json
+
+# Coverage
+.coverage
+htmlcov/
+
+# Playwright Testing
+frontend/playwright-report/
+frontend/test-results/
+frontend/playwright/.cache/
+frontend/e2e/.auth/
+frontend/debug.png
+
+# Build artifacts
+frontend/stats.html
+
+#graphifyy
+graphify-out/
