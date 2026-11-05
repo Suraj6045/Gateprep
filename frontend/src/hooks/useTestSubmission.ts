@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
-import axios from 'axios'
+import { getApiErrorDetail } from '@/lib/apiError'
 import { testAPI } from '../api/api'
 import type { MutableRefObject } from 'react'
 import type { TestQuestion } from '@/types/api'
@@ -101,7 +101,7 @@ export default function useTestSubmission({
 
       navigate(`/results/${res.data.id}`)
     } catch (err) {
-      toast.error(axios.isAxiosError(err) ? err.response?.data?.detail || 'Submit failed. Please try again.' : 'Submit failed. Please try again.')
+      toast.error(getApiErrorDetail(err) || 'Submit failed. Please try again.')
       submitLockRef.current = false
       setSubmitting(false)
     }

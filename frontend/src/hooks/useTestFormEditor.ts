@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import toast from 'react-hot-toast'
-import axios from 'axios'
+import { getApiErrorDetail } from '@/lib/apiError'
 import type { FormEvent, Dispatch, SetStateAction } from 'react'
 import type { TestDetail, TestPatch } from '@/types/api'
 
@@ -60,7 +60,7 @@ export function useTestFormEditor(test: TestDetail | null, updateTestDetails: Te
       setIsEditingTest(false)
       toast.success('Test updated')
     } catch (err) {
-      toast.error(axios.isAxiosError(err) ? err.response?.data?.detail || 'Failed to update test' : 'Failed to update test')
+      toast.error(getApiErrorDetail(err) || 'Failed to update test')
     } finally {
       setSavingTest(false)
     }

@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
-import axios from 'axios'
+import { getApiErrorDetail } from '@/lib/apiError'
 import { adminAPI, testAPI } from '../api/api'
 import type { Dispatch, MutableRefObject, SetStateAction } from 'react'
 import type { AttemptStart, TestQuestion } from '@/types/api'
@@ -163,7 +163,7 @@ export default function useAttemptLifecycle({
       }, 2000)
     } catch (err) {
       console.error('TestEngine beginTest error:', err)
-      toast.error(axios.isAxiosError(err) ? err.response?.data?.detail || 'Failed to start test' : 'Failed to start test')
+      toast.error(getApiErrorDetail(err) || 'Failed to start test')
       navigate('/tests')
     } finally {
       setStarting(false)
