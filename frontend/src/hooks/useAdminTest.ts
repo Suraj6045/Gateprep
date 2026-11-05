@@ -1,6 +1,6 @@
 import { useCallback, useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
-import axios from 'axios'
+import { getApiErrorDetail } from '@/lib/apiError'
 import { adminAPI } from '../api/api'
 import type { Dispatch, SetStateAction } from 'react'
 import type { AdminQuestion, QuestionsUploadResponse, TestDetail, TestPatch, QuestionIn } from '@/types/api'
@@ -35,7 +35,7 @@ export function useAdminTest(testId: string | number): AdminTestResult {
       setTest(testResponse.data)
       setQuestions(questionsResponse.data)
     } catch (err) {
-      toast.error(axios.isAxiosError(err) ? err.response?.data?.detail || 'Failed to load test' : 'Failed to load test')
+      toast.error(getApiErrorDetail(err) || 'Failed to load test')
     } finally {
       setLoading(false)
     }
@@ -100,7 +100,7 @@ export function useAdminTest(testId: string | number): AdminTestResult {
       toast.success(target === 'question' ? 'Question image uploaded!' : `Option ${target} image uploaded!`)
       await load()
     } catch (err) {
-      toast.error(axios.isAxiosError(err) ? err.response?.data?.detail || 'Upload failed. Check Cloudinary config.' : 'Upload failed. Check Cloudinary config.')
+      toast.error(getApiErrorDetail(err) || 'Upload failed. Check Cloudinary config.')
     }
   }, [load])
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import axios from 'axios'
+import { getApiErrorDetail } from '@/lib/apiError'
 import { testAPI } from '../api/api'
 import type { TestDetail } from '@/types/api'
 
@@ -31,7 +31,7 @@ export default function useTestLoader({ testId, navigate }: TestLoaderParams): T
         if (cancelled) return
         setTest(testRes.data)
       } catch (err) {
-        toast.error(axios.isAxiosError(err) ? err.response?.data?.detail || 'Failed to load test' : 'Failed to load test')
+        toast.error(getApiErrorDetail(err) || 'Failed to load test')
         navigate('/tests')
       } finally {
         if (!cancelled) setLoading(false)

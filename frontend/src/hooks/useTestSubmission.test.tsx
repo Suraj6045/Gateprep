@@ -144,4 +144,32 @@ describe('useTestSubmission NAT answers', () => {
 
     expect(testAPI.submitTest).toHaveBeenCalledExactlyOnceWith(7, 3, [])
   })
+
+  it('displays the server error detail when submission fails with a string detail', async () => {
+    vi.mocked(testAPI.submitTest).mockRejectedValueOnce({
+      response: { data: { detail: 'Submission deadline passed' } },
+    })
+    const options = createOptions()
+    const { result } = renderHook(() => useTestSubmission(options))
+
+    await act(async () => result.current.doSubmit())
+
+    expect(toast.error).toHaveBeenCalledWith('Submission deadline passed')
+    expect(result.current.submitting).toBe(false)
+    expect(result.current.submitLockRef.current).toBe(false)
+  })
+
+  it('displays the fallback error message when submission fails with an array detail', async () => {
+    vi.mocked(testAPI.submitTest).mockRejectedValueOnce({
+      response: { data: { detail: [{ msg: 'Validation error' }] } },
+    })
+    const options = createOptions()
+    const { result } = renderHook(() => useTestSubmission(options))
+
+    await act(async () => result.current.doSubmit())
+
+    expect(toast.error).toHaveBeenCalledWith('Submit failed. Please try again.')
+    expect(result.current.submitting).toBe(false)
+    expect(result.current.submitLockRef.current).toBe(false)
+  })
 })

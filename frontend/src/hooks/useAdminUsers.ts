@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import useSWR from 'swr'
 import toast from 'react-hot-toast'
-import axios from 'axios'
+import { getApiErrorDetail } from '@/lib/apiError'
 import { adminAPI, fetcher } from '../api/api'
 import type { Dispatch, SetStateAction } from 'react'
 import type { AdminRole, AdminUser, AdminUsersResponse, PasswordResetResponse } from '@/types/api'
@@ -94,7 +94,7 @@ export default function useAdminUsers(): AdminUsersResult {
       } : previous, false)
       toast.success(`Role updated to ${role}`)
     } catch (err) {
-      toast.error(axios.isAxiosError(err) ? err.response?.data?.detail || 'Failed' : 'Failed')
+      toast.error(getApiErrorDetail(err) || 'Failed')
     } finally {
       setUpdating(u => ({ ...u, [userId]: false }))
     }
@@ -130,7 +130,7 @@ export default function useAdminUsers(): AdminUsersResult {
         toast.success('Reset link created — copy it from the dialog')
       }
     } catch (err) {
-      toast.error(axios.isAxiosError(err) ? err.response?.data?.detail || 'Failed to create reset link' : 'Failed to create reset link')
+      toast.error(getApiErrorDetail(err) || 'Failed to create reset link')
     } finally {
       setUpdating(u => ({ ...u, [key]: false }))
     }

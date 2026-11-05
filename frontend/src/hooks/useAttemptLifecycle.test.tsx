@@ -157,4 +157,32 @@ describe('useAttemptLifecycle identifier validation', () => {
 
     expect(testAPI.startTest).toHaveBeenCalledExactlyOnceWith(0)
   })
+
+  it('displays the server error detail when starting fails with a string detail', async () => {
+    vi.mocked(testAPI.startTest).mockRejectedValueOnce({
+      response: { data: { detail: 'Already active' } },
+    })
+    const options = createOptions(1)
+    const { result } = renderHook(() => useAttemptLifecycle(options))
+
+    act(() => result.current.setAccepted(true))
+    await act(async () => result.current.beginTest())
+
+    expect(toast.error).toHaveBeenCalledWith('Already active')
+    expect(options.navigate).toHaveBeenCalledWith('/tests')
+  })
+
+  it('displays the fallback error message when starting fails with an array detail', async () => {
+    vi.mocked(testAPI.startTest).mockRejectedValueOnce({
+      response: { data: { detail: [{ msg: 'Validation failed' }] } },
+    })
+    const options = createOptions(1)
+    const { result } = renderHook(() => useAttemptLifecycle(options))
+
+    act(() => result.current.setAccepted(true))
+    await act(async () => result.current.beginTest())
+
+    expect(toast.error).toHaveBeenCalledWith('Failed to start test')
+    expect(options.navigate).toHaveBeenCalledWith('/tests')
+  })
 })

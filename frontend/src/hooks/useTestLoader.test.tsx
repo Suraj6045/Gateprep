@@ -86,4 +86,34 @@ describe('useTestLoader identifier validation', () => {
     expect(result.current.test).toBeNull()
     expect(testAPI.getTest).toHaveBeenCalledExactlyOnceWith(17)
   })
+
+  it('displays the server error detail when loading fails with a string detail', async () => {
+    const navigate = vi.fn<TestLoaderParams['navigate']>()
+    vi.mocked(testAPI.getTest).mockRejectedValueOnce({
+      isAxiosError: true,
+      response: { data: { detail: 'Specific test load failure' } },
+    })
+    const { result } = renderHook(() => useTestLoader({ testId: 17, navigate }))
+
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    expect(result.current.test).toBeNull()
+    expect(toast.error).toHaveBeenCalledWith('Specific test load failure')
+    expect(navigate).toHaveBeenCalledWith('/tests')
+  })
+
+  it('displays the fallback error message when loading fails with an array detail', async () => {
+    const navigate = vi.fn<TestLoaderParams['navigate']>()
+    vi.mocked(testAPI.getTest).mockRejectedValueOnce({
+      isAxiosError: true,
+      response: { data: { detail: [{ msg: 'Invalid id' }] } },
+    })
+    const { result } = renderHook(() => useTestLoader({ testId: 17, navigate }))
+
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    expect(result.current.test).toBeNull()
+    expect(toast.error).toHaveBeenCalledWith('Failed to load test')
+    expect(navigate).toHaveBeenCalledWith('/tests')
+  })
 })
