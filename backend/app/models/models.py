@@ -134,7 +134,7 @@ class Question(Base):
     question_text: Mapped[str] = mapped_column(Text, nullable=False)
     question_image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     question_image_id: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    options: Mapped[list | dict] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=False, default=list)
+    options: Mapped[list] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=False, default=list)
     option_images: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=True)
     correct_answer: Mapped[str] = mapped_column(String(500), nullable=False)
     marks: Mapped[float] = mapped_column(Float, default=1.0)

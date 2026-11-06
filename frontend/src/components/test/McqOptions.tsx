@@ -3,10 +3,7 @@ import MathText from '../shared/MathText'
 import OptionImage from './OptionImage'
 import type { TestQuestion } from '@/types/api'
 
-export type OptionQuestion = TestQuestion & {
-  options: string[]
-  option_images?: Record<string, string | undefined> | null
-}
+export type OptionQuestion = TestQuestion
 
 export interface McqOptionsProps {
   question: OptionQuestion
@@ -60,7 +57,7 @@ export default function McqOptions({ question, selectedLetter, onSelect }: McqOp
             <div className="flex-1">
               <span className="text-xs font-semibold mr-2 text-muted-foreground">{letter}.</span>
               <div className="text-sm text-foreground"><MathText>{option}</MathText></div>
-              <OptionImage src={question.option_images?.[letter]} letter={letter} />
+              <OptionImage src={typeof question.option_images?.[letter] === 'string' ? question.option_images[letter] : undefined} letter={letter} />
             </div>
           </div>
         )

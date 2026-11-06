@@ -33,7 +33,7 @@ def _payloads() -> list[tuple[type, object]]:
         "question_text": "Question",
         "question_type": QuestionType.mcq,
         "question_image_url": None,
-        "options": ["A", 2],
+        "options": ["A", "B"],
         "option_images": {"A": 1, "B": None},
         "correct_answer": "A",
         "selected_answer": None,
@@ -45,7 +45,7 @@ def _payloads() -> list[tuple[type, object]]:
         "topper_answer": None,
         "topper_time_seconds": 0,
     }
-    answer_dict = {**answer_list, "question_id": 2, "options": {"A": 1, "B": False}}
+    answer_dict = {**answer_list, "question_id": 2, "options": ["C", "D"]}
     return [
         (
             CatalogResponse,
@@ -191,7 +191,7 @@ def _payloads() -> list[tuple[type, object]]:
                 "question_type": QuestionType.msq,
                 "question_text": "Question",
                 "question_image_url": None,
-                "options": {"A": 1, "B": False},
+                "options": ["A", "B"],
                 "option_images": {"A": 1},
                 "order_index": 0,
                 "marks": 1,

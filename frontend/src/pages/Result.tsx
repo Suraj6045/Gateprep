@@ -84,23 +84,17 @@ export interface McqOptionsGridProps {
 }
 
 function McqOptionsGrid({ qa }: McqOptionsGridProps) {
-  // The backend model permits dict options, but this page has always used array length/map.
-  // Keep that existing runtime behavior while retaining the model's list-or-dict type.
-  // @ts-expect-error TODO(null-safety): options may be a dict; its length value remains untyped and is compared as before.
-  if (!(qa.options?.length > 0)) return null
+  if (!(qa.options && qa.options.length > 0)) return null
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-2">
       {
-        // @ts-expect-error TODO(null-safety): options may be a dict without map; preserve the existing array-only rendering path.
-        qa.options.map((o: unknown, i: number) => {
+        qa.options.map((o, i) => {
         const letter = 'ABCD'[i]
         const { isCorrect, isSelected, isTopperPick } = getOptionState(qa, letter)
         return (
           <div key={i} className={clsx('px-3 py-2 rounded text-xs', getOptionClassName(isCorrect, isSelected))}>
             <span className="font-mono font-semibold mr-1">{letter}.</span>
-            { // @ts-expect-error TODO(null-safety): option JSON may contain a non-renderable value; preserve direct React child behavior.
-              <MathText>{o}</MathText>
-            }
+            <MathText>{o}</MathText>
             { // @ts-expect-error TODO(null-safety): optimizer preserves non-string image values; OptionImage expects a URL string.
               <OptionImage src={qa.option_images?.[letter]} letter={letter} />
             }

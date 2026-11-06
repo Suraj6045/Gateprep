@@ -44,7 +44,7 @@ export default function MsqOptions({ question, selectedLetters, onToggle }: MsqO
             <span className="text-xs font-semibold mr-2 text-muted-foreground">{letter}.</span>
             <div className="flex-1">
               <div className="text-sm text-foreground"><MathText>{option}</MathText></div>
-              <OptionImage src={question.option_images?.[letter]} letter={letter} />
+              <OptionImage src={typeof question.option_images?.[letter] === 'string' ? question.option_images[letter] : undefined} letter={letter} />
             </div>
           </div>
         )

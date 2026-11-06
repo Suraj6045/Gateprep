@@ -30,7 +30,7 @@ jobs:
 
       - name: Check TypeScript suppressions
         env:
-          TS_SUPPRESSION_BUDGET: 23
+          TS_SUPPRESSION_BUDGET: 18
         run: |
           count=$(grep -rn "@ts-expect-error" frontend/src --include='*.ts' --include='*.tsx' | wc -l)
           test "$count" -le "$TS_SUPPRESSION_BUDGET"

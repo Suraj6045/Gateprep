@@ -1149,9 +1149,7 @@ export interface components {
                 [key: string]: unknown;
             } | null;
             /** Options */
-            options: unknown[] | {
-                [key: string]: unknown;
-            };
+            options: string[];
             /** Question Id */
             question_id: number;
             /** Question Image Url */
@@ -1256,9 +1254,7 @@ export interface components {
                 [key: string]: unknown;
             } | null;
             /** Options */
-            options: unknown[] | {
-                [key: string]: unknown;
-            };
+            options: string[];
             /** Order Index */
             order_index: number;
             /** Question Image Url */
