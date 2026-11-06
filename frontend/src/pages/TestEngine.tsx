@@ -94,7 +94,6 @@ export default function TestEngine() {
             current={current}
             markAndNext={markAndNext}
             natInput={natInput}
-            // @ts-expect-error TODO(null-safety): backend options is list or dict (and option_images may hold non-strings); the option components assume list/string, so a dict-shaped options value would throw in .map at runtime, as before
             question={currentQuestion}
             questions={questions}
             saveAndNext={saveAndNext}

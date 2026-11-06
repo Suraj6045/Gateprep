@@ -169,7 +169,7 @@ export interface ResultAnswer {
   topper_answer?: string | null
   topper_time_seconds?: number
   is_correct?: boolean | null
-  options?: unknown[] | Record<string, unknown>
+  options?: string[]
   marks_awarded?: number
   question_text?: string
   selected_answer?: string | null

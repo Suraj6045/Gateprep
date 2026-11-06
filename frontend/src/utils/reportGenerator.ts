@@ -23,7 +23,6 @@ function formatDate(value: string | null | undefined): string {
 export function buildResultHtml(result: ResultData): string {
   const rows = (result.answers || []).map((answer, idx) => {
     const status = answer.is_correct === true ? 'Correct' : answer.is_correct === false ? 'Wrong' : 'Skipped'
-    // @ts-expect-error TODO(null-safety): options may be a dict; keep the existing array-only report generation path.
     const options = (answer.options || []).map((option: unknown, i: number) => {
       const letter = 'ABCD'[i] || `${i + 1}`
       return `<li><strong>${letter}.</strong> ${escapeHtml(option)}</li>`

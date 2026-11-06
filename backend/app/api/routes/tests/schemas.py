@@ -94,7 +94,7 @@ class ResultAnswerResponse(BaseModel):
     question_text: str
     question_type: QuestionType
     question_image_url: str | None
-    options: list[Any] | dict[str, Any]
+    options: list[str]
     option_images: dict[str, Any] | None
     correct_answer: str
     selected_answer: str | None
@@ -166,7 +166,7 @@ class TestQuestionResponse(BaseModel):
     question_type: QuestionType
     question_text: str
     question_image_url: str | None
-    options: list[Any] | dict[str, Any]
+    options: list[str]
     option_images: dict[str, Any] | None
     order_index: int
     marks: int | float
