@@ -260,10 +260,8 @@ function TestTag({ test }: { test: AdminTestListItem }) {
   }
   if (test.category === 'test_series') {
     const parts = [
-      // @ts-expect-error TODO(null-safety): series_name is null for test-series rows without a series; the lookup with null yields undefined at runtime and the series tag omits that label
-      SERIES_LABELS[test.series_name],
-      // @ts-expect-error TODO(null-safety): test_type is null for test-series rows without a type; the lookup with null yields undefined at runtime and the series tag omits that label
-      TYPE_LABELS[test.test_type],
+      test.series_name ? SERIES_LABELS[test.series_name] : null,
+      test.test_type ? TYPE_LABELS[test.test_type] : null,
       test.test_type === 'topic_wise' && test.subject ? test.subject.split(' ')[0] : null
     ].filter(Boolean)
     return <Badge variant="outline" className={`${BADGE_COLORS.purple} text-xs`}>{parts.join(' · ')}</Badge>
@@ -386,9 +384,8 @@ export default function AdminTests() {
       {showCreate && (
         <CreateTestModal
           onClose={() => setShowCreate(false)}
-          onCreated={t => {
-            // @ts-expect-error TODO(null-safety): AdminTestCreateResponse lacks description, duration_minutes, series_id, created_at, category, series_name, test_type, subject, is_published; the inserted row renders "undefinedm" duration and no category/series tags until SWR revalidates
-            mutate([t, ...tests], false)
+          onCreated={() => {
+            mutate()
             setShowCreate(false)
           }}
         />
