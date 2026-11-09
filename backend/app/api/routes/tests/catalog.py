@@ -1,11 +1,22 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi_cache.decorator import cache
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api.deps import require_aspirant
+from app.core.cache_utils import (
+    CATALOG_CACHE_NAMESPACE,
+    CATALOG_CACHE_SECONDS,
+    catalog_cache_key_builder,
+)
 from app.core.database import get_db
 from app.models.models import Question, Test
 
+@cache(
+    expire=CATALOG_CACHE_SECONDS,
+    namespace=CATALOG_CACHE_NAMESPACE,
+    key_builder=catalog_cache_key_builder,
+)
 def list_tests(db: Session = Depends(get_db), _=Depends(require_aspirant)):
     results = (
         db.query(Test, func.count(Question.id).label("question_count"))
@@ -34,6 +45,11 @@ def list_tests(db: Session = Depends(get_db), _=Depends(require_aspirant)):
     ]
 
 
+@cache(
+    expire=CATALOG_CACHE_SECONDS,
+    namespace=CATALOG_CACHE_NAMESPACE,
+    key_builder=catalog_cache_key_builder,
+)
 def get_test(test_id: int, db: Session = Depends(get_db), _=Depends(require_aspirant)):
     test = (
         db.query(Test)

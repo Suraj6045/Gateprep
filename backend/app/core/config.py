@@ -144,8 +144,8 @@ class Settings(BaseSettings):
     AUTH_COOKIE_NAME: str = "access_token"
     AUTH_COOKIE_SECURE: bool = True
     AUTH_COOKIE_SAMESITE: str = "none"
-    DB_POOL_SIZE: int = 20
-    DB_MAX_OVERFLOW: int = 30
+    DB_POOL_SIZE: int = 5
+    DB_MAX_OVERFLOW: int = 5
     CLOUDINARY_CLOUD_NAME: str = ""
     CLOUDINARY_API_KEY: str = ""
     CLOUDINARY_API_SECRET: str = ""

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { getEndTimeMs } from '../utils/testEngineUtils'
 import useAntiCheat from './useAntiCheat'
+import useNextQuestionPrefetch from './useNextQuestionPrefetch'
 import useTestLoader from './useTestLoader'
 import useTestAnswerState from './useTestAnswerState'
 import useTestProgress from './useTestProgress'
@@ -137,6 +138,9 @@ export default function useTestEngine(): TestEngineResult {
   })
 
   const { saveAndNext, markAndNext, questionGroups, subjects, answered, notAnswered } = progress
+
+  // --- warm the browser cache with the next question's diagrams ---
+  useNextQuestionPrefetch(questions, current, started)
 
   // --- attempt lifecycle ---
   const attemptSub = useAttemptLifecycle({

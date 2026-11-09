@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
@@ -60,6 +61,11 @@ app = FastAPI(title="GATE Prep Platform", version="2.0.0", lifespan=lifespan)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+# Compress large JSON (question lists, results) before it leaves the Space.
+# Added first = innermost: the CSRF/SlowAPI middlewares below stream response
+# chunks, so an outer GZip would never see a single small body and would
+# ignore minimum_size (compressing even tiny responses).
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(CSRFHeaderMiddleware)
 app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(
