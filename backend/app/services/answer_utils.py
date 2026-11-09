@@ -3,8 +3,9 @@ import re
 from typing import Any, Optional
 
 _NUMBER = r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?"
+_NUMBER_RE = re.compile(rf"^{_NUMBER}$", re.ASCII)
 _NAT_RANGE_RE = re.compile(
-    rf"^\s*({_NUMBER})\s*(?:-|:|to)\s*({_NUMBER})\s*$", re.IGNORECASE
+    rf"^\s*({_NUMBER})\s*(?:-|:|to)\s*({_NUMBER})\s*$", re.IGNORECASE | re.ASCII
 )
 _ANSWER_SPLIT_RE = re.compile(r"\s*[,;/]\s*")
 
@@ -18,15 +19,18 @@ def normalize_question_type(question_type: Any) -> str:
 
 
 def parse_float(value: Any) -> Optional[float]:
+    text = str(value if value is not None else "").strip()
+    if not text or not _NUMBER_RE.match(text):
+        return None
     try:
-        parsed = float(str(value).strip())
+        parsed = float(text)
     except (TypeError, ValueError):
         return None
     return parsed if math.isfinite(parsed) else None
 
 
 def parse_nat_range(value: Any) -> Optional[tuple[float, float]]:
-    text = str(value or "").strip().replace(" ", "")
+    text = str(value if value is not None else "").strip()
     match = _NAT_RANGE_RE.match(text)
     if not match:
         return None
@@ -48,8 +52,7 @@ def is_valid_nat_answer(value: Any) -> bool:
     if not tokens:
         return False
     return all(
-        parse_float(token.replace(" ", "")) is not None
-        or parse_nat_range(token.replace(" ", "")) is not None
+        parse_float(token) is not None or parse_nat_range(token) is not None
         for token in tokens
     )
 

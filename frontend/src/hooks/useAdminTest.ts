@@ -46,12 +46,14 @@ export function useAdminTest(testId: string | number): AdminTestResult {
   }, [load])
 
   const updateTestDetails = useCallback(async (payload: TestPatch) => {
-    await adminAPI.updateTest(testId, payload)
+    const res = await adminAPI.updateTest(testId, payload)
+    const isPublished = (res.data as { is_published?: boolean })?.is_published ?? (payload.is_published !== null ? payload.is_published : undefined)
     setTest(current => current ? {
       ...current,
       title: payload.title ?? current.title,
       description: payload.description ?? current.description,
       duration_minutes: payload.duration_minutes ?? current.duration_minutes,
+      is_published: isPublished !== undefined ? isPublished : current.is_published,
     } : current)
   }, [testId])
 
@@ -61,10 +63,7 @@ export function useAdminTest(testId: string | number): AdminTestResult {
   }, [load, testId])
 
   const addQuestionsJSON = useCallback(async (questionsToAdd: QuestionIn[]) => {
-    const chunkSize = 20
-    for (let idx = 0; idx < questionsToAdd.length; idx += chunkSize) {
-      await adminAPI.addQuestions(testId, questionsToAdd.slice(idx, idx + chunkSize))
-    }
+    await adminAPI.addQuestions(testId, questionsToAdd)
     await load()
   }, [load, testId])
 
@@ -78,11 +77,17 @@ export function useAdminTest(testId: string | number): AdminTestResult {
 
   const deleteQuestion = useCallback(async (questionId: string | number) => {
     try {
-      await adminAPI.deleteQuestion(testId, questionId)
+      const res = await adminAPI.deleteQuestion(testId, questionId)
+      const data = res.data as { message?: string; reverted_to_draft?: boolean } | undefined
       setQuestions(current => current.filter(question => question.id !== questionId))
-      toast.success('Deleted')
-    } catch {
-      toast.error('Failed')
+      if (data?.reverted_to_draft) {
+        setTest(current => current ? { ...current, is_published: false } : current)
+        toast.success('Question deleted. Test reverted to draft (0 questions)')
+      } else {
+        toast.success('Deleted')
+      }
+    } catch (err) {
+      toast.error(getApiErrorDetail(err) || 'Failed to delete question')
     }
   }, [testId])
 

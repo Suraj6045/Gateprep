@@ -89,7 +89,7 @@ export interface DashboardTestCardProps {
   percentage: number | null
 }
 
-function DashboardTestCard({ testItem, attempt, done, percentage }: DashboardTestCardProps) {
+export function DashboardTestCard({ testItem, attempt, done, percentage }: DashboardTestCardProps) {
   const resultTone = percentage !== null ? getScoreToneClass(percentage) : ''
 
   return (
@@ -121,14 +121,20 @@ function DashboardTestCard({ testItem, attempt, done, percentage }: DashboardTes
       </CardContent>
       <CardFooter className="border-t-0 bg-transparent p-3 pt-1">
         {done ? (
-          <Button asChild variant="outline" className="w-full border-primary/30 text-primary hover:bg-primary/10">
-            {
-              // @ts-expect-error TODO(null-safety): done implies attempt exists; if that correlation breaks, reading id would throw.
-              <Link to={`/results/${attempt.id}`}>
-                View Result <ArrowRight size={16} className="ml-2" />
+          <div className="flex gap-2 w-full">
+            {attempt?.id != null && (
+              <Button asChild variant="outline" className="flex-1 border-primary/30 text-primary hover:bg-primary/10">
+                <Link to={`/results/${attempt.id}`}>
+                  View Result
+                </Link>
+              </Button>
+            )}
+            <Button asChild variant={attempt?.id != null ? 'secondary' : 'default'} className={attempt?.id != null ? 'flex-1' : 'w-full'}>
+              <Link to={`/tests/${testItem.id}`}>
+                Retake
               </Link>
-            }
-          </Button>
+            </Button>
+          </div>
         ) : (
           <Button asChild className="w-full">
             <Link to={`/tests/${testItem.id}`}>

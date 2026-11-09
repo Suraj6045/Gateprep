@@ -1,6 +1,6 @@
 import enum
 from datetime import datetime, timezone
-
+import sqlalchemy as sa
 from sqlalchemy import (JSON, Boolean, DateTime, Enum, Float,
                         ForeignKey, Integer, String, Text, UniqueConstraint, Index)
 from sqlalchemy.orm import relationship, Mapped, mapped_column
@@ -100,7 +100,7 @@ class Test(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     duration_minutes: Mapped[int] = mapped_column(Integer, default=180)
     total_marks: Mapped[float] = mapped_column(Float, default=0.0)
-    is_published: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_published: Mapped[bool] = mapped_column(Boolean, default=False, server_default=sa.text("false"))
     series_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("test_series.id"), nullable=True, index=True)
     series_order: Mapped[int] = mapped_column(Integer, default=0)
     category: Mapped[str | None] = mapped_column(String(50), nullable=True)

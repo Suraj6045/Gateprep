@@ -16,7 +16,7 @@ def test_fetch_user_bookmarks_eager_loads_question_and_test():
     Base.metadata.create_all(engine)
     session = sessionmaker(bind=engine)()
 
-    test = Test(title="GATE Practice Test")
+    test = Test(title="GATE Practice Test", is_published=True)
     question = Question(
         test=test,
         question_text="What is 2 + 2?",

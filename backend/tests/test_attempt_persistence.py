@@ -42,7 +42,7 @@ class AttemptPersistenceTests(unittest.TestCase):
         db = self.SessionLocal()
         try:
             user = User(email="student@example.com", full_name="Student", role=UserRole.aspirant)
-            test = Test(title="Persistence", created_by=1, total_marks=2.0)
+            test = Test(title="Persistence", created_by=1, total_marks=2.0, is_published=True)
             db.add_all([user, test])
             db.commit()
             db.refresh(user)

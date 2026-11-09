@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import Any, List
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
@@ -20,6 +21,7 @@ from .helpers import _question_out, read_upload_bytes
 from .schemas import QuestionFileImport, QuestionIn, QuestionsBulk
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 def _questions_from_json_root(data: Any) -> list[Any]:
     if isinstance(data, list):
@@ -237,10 +239,20 @@ def add_questions(
 
     existing = _get_existing_question_count(db, test_id)
     start_index = _get_max_question_order(db, test_id) + 1
-    total_added = _insert_questions(db, test_id, payload.questions, start_index)
+    try:
+        total_added = _insert_questions(db, test_id, payload.questions, start_index)
+        test.total_marks = (test.total_marks or 0.0) + total_added
+        db.commit()
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as exc:
+        db.rollback()
+        logger.exception("Failed to add questions for test %s", test_id)
+        raise HTTPException(
+            status_code=500, detail="Failed to add questions"
+        ) from exc
 
-    test.total_marks = (test.total_marks or 0.0) + total_added
-    db.commit()
     return {
         "message": f"Added {len(payload.questions)} questions",
         "total_in_test": existing + len(payload.questions),
@@ -420,15 +432,30 @@ def delete_question(
         if public_id and public_id not in image_public_ids:
             image_public_ids.append(public_id)
 
+    deleted_order = q.order_index
     db.delete(q)
+    reverted_to_draft = False
     try:
         db.flush()
+        db.query(Question).filter(
+            Question.test_id == test_id,
+            Question.order_index > deleted_order,
+        ).update(
+            {Question.order_index: Question.order_index - 1},
+            synchronize_session=False,
+        )
         test.total_marks = (
             db.query(func.coalesce(func.sum(Question.marks), 0.0))
             .filter(Question.test_id == test_id)
             .scalar()
             or 0.0
         )
+        remaining_count = (
+            db.query(Question.id).filter(Question.test_id == test_id).count()
+        )
+        if remaining_count == 0 and test.is_published:
+            test.is_published = False
+            reverted_to_draft = True
         db.commit()
     except IntegrityError as exc:
         db.rollback()
@@ -439,4 +466,4 @@ def delete_question(
 
     for public_id in image_public_ids:
         delete_image(public_id)
-    return {"message": "Deleted"}
+    return {"message": "Deleted", "reverted_to_draft": reverted_to_draft}

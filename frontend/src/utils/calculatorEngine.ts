@@ -39,7 +39,9 @@ function shouldPopOperator(operators: string[], token: Operator): boolean {
     operators.length > 0 &&
     top !== undefined &&
     isOperatorToken(top) &&
-    OPERATOR_PRECEDENCE[top] >= OPERATOR_PRECEDENCE[token]
+    (token === 'xʸ'
+      ? OPERATOR_PRECEDENCE[top] > OPERATOR_PRECEDENCE[token]
+      : OPERATOR_PRECEDENCE[top] >= OPERATOR_PRECEDENCE[token])
   )
 }
 

@@ -24,7 +24,9 @@ export interface AdminQuestion extends TestQuestion {
   option_images: Record<string, string | null> | null
 }
 
-export type TestDetail = components['schemas']['DetailResponse']
+export type TestDetail = components['schemas']['DetailResponse'] & {
+  is_published?: boolean
+}
 
 // TODO(response_model): fields consumed by admin user management.
 export interface AdminUser {

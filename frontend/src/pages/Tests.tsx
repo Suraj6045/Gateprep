@@ -29,14 +29,20 @@ function TestCardFooter({ done, attempt, test }: TestCardFooterProps) {
   return (
     <CardFooter className="border-t-0 bg-transparent p-4 pt-0">
       {done ? (
-        <Button asChild className="w-full h-8 text-xs">
-          {
-            // @ts-expect-error TODO(null-safety): done implies attempt exists; if that correlation breaks, reading id would throw.
-            <Link to={`/results/${attempt.id}`}>
-              View Result <ArrowRight size={12} className="ml-1.5" />
+        <div className="flex gap-2 w-full">
+          {attempt?.id != null && (
+            <Button asChild variant="outline" className="flex-1 h-8 text-xs border-primary/30 text-primary hover:bg-primary/10">
+              <Link to={`/results/${attempt.id}`}>
+                View Result
+              </Link>
+            </Button>
+          )}
+          <Button asChild variant={attempt?.id != null ? 'secondary' : 'default'} className={`${attempt?.id != null ? 'flex-1' : 'w-full'} h-8 text-xs`}>
+            <Link to={`/tests/${test.id}`}>
+              Retake
             </Link>
-          }
-        </Button>
+          </Button>
+        </div>
       ) : (
         <Button asChild className="w-full h-8 text-xs">
           <Link to={`/tests/${test.id}`}>

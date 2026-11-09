@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
+import toast from 'react-hot-toast'
+import { getApiErrorDetail } from '@/lib/apiError'
 import { useAdminTest } from '../hooks/useAdminTest'
 import { useTestFormEditor } from '../hooks/useTestFormEditor'
 import { useQuestionFormMode } from '../hooks/useQuestionFormMode'
@@ -39,6 +41,24 @@ function AdminTestDetailContent({ testId }: AdminTestDetailContentProps): ReactE
   const [questionToDelete, setQuestionToDelete] = useState<number | null>(null)
 
   const previewTest = useCallback(() => navigate(`/tests/${testId}?preview=true`), [navigate, testId])
+  const [publishing, setPublishing] = useState(false)
+
+  const handleTogglePublish = useCallback(async () => {
+    if (!test) return
+    const nextPublished = !test.is_published
+    setPublishing(true)
+    try {
+      await updateTestDetails({ is_published: nextPublished })
+      toast.success(nextPublished ? 'Test published' : 'Test unpublished')
+    } catch (err) {
+      toast.error(
+        getApiErrorDetail(err) ||
+          (nextPublished ? 'Failed to publish test' : 'Failed to unpublish test')
+      )
+    } finally {
+      setPublishing(false)
+    }
+  }, [test, updateTestDetails])
 
   const handleAddQuestion = useCallback(async (question: QuestionIn) => {
     await addQuestion(question)
@@ -74,6 +94,8 @@ function AdminTestDetailContent({ testId }: AdminTestDetailContentProps): ReactE
             onPreview={previewTest}
             onToggleJson={toggleJsonMode}
             onToggleManual={toggleManualMode}
+            onTogglePublish={handleTogglePublish}
+            publishing={publishing}
           />
         </div>
 
