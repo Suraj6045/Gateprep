@@ -64,7 +64,7 @@ export default function TestHeader({
             >
               <Pencil size={15}/>
             </button>
-            {test && !test.is_published && (
+            {test?.is_published === false && (
               <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
                 Draft
               </span>
@@ -83,15 +83,15 @@ export default function TestHeader({
         {onTogglePublish && (
           <span
             title={
-              questionsCount === 0 && !test?.is_published
+              questionsCount === 0 && test?.is_published !== true
                 ? 'Cannot publish a test with 0 questions'
                 : undefined
             }
           >
             <Button
-              variant={test?.is_published ? 'secondary' : 'default'}
+              variant={test?.is_published === true ? 'secondary' : 'default'}
               disabled={
-                (questionsCount === 0 && !test?.is_published) ||
+                (questionsCount === 0 && test?.is_published !== true) ||
                 savingTest ||
                 publishing
               }
@@ -100,7 +100,7 @@ export default function TestHeader({
             >
               {publishing ? (
                 <Spinner size={14} />
-              ) : test?.is_published ? (
+              ) : test?.is_published === true ? (
                 'Unpublish'
               ) : (
                 'Publish'

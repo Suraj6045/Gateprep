@@ -28,27 +28,6 @@ def upgrade() -> None:
             nullable=False,
         )
 
-    # Revert legacy empty tests that were published
-    op.execute(
-        "UPDATE tests SET is_published = false WHERE NOT EXISTS "
-        "(SELECT 1 FROM questions WHERE questions.test_id = tests.id)"
-    )
-
-    # Normalize order_index gaps for Postgres if present
-    bind = op.get_bind()
-    if bind.dialect.name == "postgresql":
-        op.execute(
-            """
-            UPDATE questions q
-            SET order_index = sub.new_idx
-            FROM (
-                SELECT id, ROW_NUMBER() OVER (PARTITION BY test_id ORDER BY order_index, id) - 1 as new_idx
-                FROM questions
-            ) sub
-            WHERE q.id = sub.id
-            """
-        )
-
 
 def downgrade() -> None:
     """Downgrade schema."""
