@@ -1,6 +1,7 @@
 import { Eye, FileJson, Pencil, Plus } from 'lucide-react'
 import TestMetaForm from './TestMetaForm'
 import { Button } from '@/components/ui/button'
+import Spinner from '../shared/Spinner'
 import type { ReactElement } from 'react'
 import type { TestDetail } from '@/types/api'
 import type { TestForm } from '@/hooks/useTestFormEditor'
@@ -21,6 +22,8 @@ export interface TestHeaderProps {
   onPreview: () => void
   onToggleJson: () => void
   onToggleManual: () => void
+  onTogglePublish?: () => Promise<void> | void
+  publishing?: boolean
 }
 
 export default function TestHeader({
@@ -36,7 +39,9 @@ export default function TestHeader({
   mode,
   onPreview,
   onToggleJson,
-  onToggleManual
+  onToggleManual,
+  onTogglePublish,
+  publishing = false,
 }: TestHeaderProps): ReactElement {
   return (
     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
@@ -50,7 +55,7 @@ export default function TestHeader({
         />
       ) : (
         <div>
-          <div className="flex items-start gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-bold theme-text">{test?.title}</h1>
             <button
               onClick={onStartEdit}
@@ -59,6 +64,11 @@ export default function TestHeader({
             >
               <Pencil size={15}/>
             </button>
+            {test?.is_published === false && (
+              <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                Draft
+              </span>
+            )}
           </div>
           <p className="theme-muted mt-1 text-sm">{test?.description || 'No description'}</p>
           <div className="flex items-center gap-4 mt-2 text-xs theme-muted">
@@ -70,6 +80,34 @@ export default function TestHeader({
       )}
 
       <div className="flex flex-wrap gap-2 sm:flex-shrink-0">
+        {onTogglePublish && (
+          <span
+            title={
+              questionsCount === 0 && test?.is_published !== true
+                ? 'Cannot publish a test with 0 questions'
+                : undefined
+            }
+          >
+            <Button
+              variant={test?.is_published === true ? 'secondary' : 'default'}
+              disabled={
+                (questionsCount === 0 && test?.is_published !== true) ||
+                savingTest ||
+                publishing
+              }
+              onClick={onTogglePublish}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition-all"
+            >
+              {publishing ? (
+                <Spinner size={14} />
+              ) : test?.is_published === true ? (
+                'Unpublish'
+              ) : (
+                'Publish'
+              )}
+            </Button>
+          </span>
+        )}
         <Button
           variant="outline"
           onClick={onPreview}

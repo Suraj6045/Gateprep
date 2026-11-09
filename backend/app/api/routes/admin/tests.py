@@ -84,6 +84,7 @@ def create_test(
         test_type=payload.test_type,
         subject=payload.subject,
         created_by=current.id,
+        is_published=False,
     )
     db.add(test)
     db.commit()
@@ -106,12 +107,23 @@ def update_test(
     test = db.query(Test).filter(Test.id == test_id).first()
     if not test:
         raise HTTPException(status_code=404, detail="Not found")
+
+    if payload.is_published is True and not test.is_published:
+        question_count = (
+            db.query(Question.id).filter(Question.test_id == test_id).count()
+        )
+        if question_count == 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot publish a test with 0 questions. Please add questions first.",
+            )
+
     update_data = payload.model_dump(exclude_none=True)
     for key, val in update_data.items():
         if hasattr(test, key):
             setattr(test, key, val)
     db.commit()
-    return {"message": "Updated"}
+    return {"message": "Updated", "is_published": test.is_published}
 
 @router.delete("/tests/{test_id}")
 def delete_test(test_id: int, db: Session = Depends(get_db), _=Depends(require_admin)):

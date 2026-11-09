@@ -85,6 +85,28 @@ def test_is_valid_nat_answer():
     assert is_valid_nat_answer("2-1") is False # Invalid range (lo > hi)
     assert is_valid_nat_answer("1.5-2.5-3.5") is False
 
+
+def test_nat_shared_test_vectors():
+    import json
+    from pathlib import Path
+
+    fixture_path = (
+        Path(__file__).resolve().parents[2]
+        / "frontend"
+        / "src"
+        / "tests"
+        / "fixtures"
+        / "nat_test_vectors.json"
+    )
+    with open(fixture_path, encoding="utf-8") as f:
+        vectors = json.load(f)
+
+    for item in vectors["valid"]:
+        assert is_valid_nat_answer(item) is True, f"Expected {item!r} to be valid NAT answer"
+
+    for item in vectors["invalid"]:
+        assert is_valid_nat_answer(item) is False, f"Expected {item!r} to be invalid NAT answer"
+
 def test_normalize_choice_answer():
     assert normalize_choice_answer("a, b, c") == "A,B,C"
     assert normalize_choice_answer(" a ; B /  c ") == "A,B,C"

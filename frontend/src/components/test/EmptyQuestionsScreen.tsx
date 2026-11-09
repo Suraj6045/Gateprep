@@ -1,3 +1,4 @@
+import { useCallback, useEffect } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -7,6 +8,27 @@ export interface EmptyQuestionsScreenProps {
 }
 
 export default function EmptyQuestionsScreen({ navigate }: EmptyQuestionsScreenProps): React.ReactElement {
+  const safeExitFullscreen = useCallback(() => {
+    if (typeof document !== 'undefined' && document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {})
+    }
+  }, [])
+
+  useEffect(() => {
+    const handlePopState = () => {
+      safeExitFullscreen()
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => {
+      window.removeEventListener('popstate', handlePopState)
+    }
+  }, [safeExitFullscreen])
+
+  const handleBack = () => {
+    safeExitFullscreen()
+    navigate('/tests')
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <Card className="w-full max-w-md text-center border-border">
@@ -16,7 +38,7 @@ export default function EmptyQuestionsScreen({ navigate }: EmptyQuestionsScreenP
           <p className="text-sm mb-5 text-muted-foreground">
             This test does not have any questions to display.
           </p>
-          <Button onClick={() => navigate('/tests')} className="w-full">
+          <Button onClick={handleBack} className="w-full">
             Back to Tests
           </Button>
         </CardContent>

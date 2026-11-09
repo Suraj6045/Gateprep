@@ -71,50 +71,91 @@ export default function useAdminUsers(): AdminUsersResult {
 
   const changeRole = useCallback(async (userId: number, role: AdminRole) => {
     const oldRole = usersById.get(userId)?.role
+    if (oldRole === role) return
+
     setUpdating(u => ({ ...u, [userId]: true }))
     try {
-      await adminAPI.updateRole(userId, role)
+      let pendingDelta = 0
+      let aspirantsDelta = 0
 
-      let newPending = pendingUsers
-      let newAspirants = aspirantsCount
-      if (oldRole === 'user' && role === 'aspirant') {
-        newPending--
-        newAspirants++
-      }
-      if (oldRole === 'aspirant' && role === 'user') {
-        newPending++
-        newAspirants--
+      if (oldRole === 'user') pendingDelta--
+      else if (oldRole === 'aspirant') aspirantsDelta--
+
+      if (role === 'user') pendingDelta++
+      else if (role === 'aspirant') aspirantsDelta++
+
+      const optimisticData = (previous: AdminUsersResponse | undefined): AdminUsersResponse => {
+        if (!previous) {
+          return {
+            items: [],
+            total: 0,
+            pending_count: 0,
+            aspirants_count: 0,
+            has_more: false,
+            next_cursor: null,
+          }
+        }
+        return {
+          ...previous,
+          items: previous.items.map(u => (u.id === userId ? { ...u, role } : u)),
+          pending_count: Math.max(0, previous.pending_count + pendingDelta),
+          aspirants_count: Math.max(0, previous.aspirants_count + aspirantsDelta),
+        }
       }
 
-      mutate((previous) => previous ? {
-        ...previous,
-        items: users.map(u => (u.id === userId ? { ...u, role } : u)),
-        pending_count: newPending,
-        aspirants_count: newAspirants,
-      } : previous, false)
+      await mutate(
+        adminAPI.updateRole(userId, role).then(() => undefined),
+        {
+          optimisticData,
+          populateCache: false,
+          rollbackOnError: true,
+          revalidate: true,
+        }
+      )
       toast.success(`Role updated to ${role}`)
     } catch (err) {
-      toast.error(getApiErrorDetail(err) || 'Failed')
+      toast.error(getApiErrorDetail(err) || 'Failed to update role')
     } finally {
       setUpdating(u => ({ ...u, [userId]: false }))
     }
-  }, [usersById, pendingUsers, aspirantsCount, usersData, users, mutate])
+  }, [usersById, mutate])
 
   const toggleStatus = useCallback(async (userId: number) => {
     setUpdating(u => ({ ...u, [userId]: true }))
     try {
-      await adminAPI.toggleStatus(userId)
-      mutate((previous) => previous ? {
-        ...previous,
-        items: users.map(u => (u.id === userId ? { ...u, is_active: !u.is_active } : u)),
-      } : previous, false)
+      const optimisticData = (previous: AdminUsersResponse | undefined): AdminUsersResponse => {
+        if (!previous) {
+          return {
+            items: [],
+            total: 0,
+            pending_count: 0,
+            aspirants_count: 0,
+            has_more: false,
+            next_cursor: null,
+          }
+        }
+        return {
+          ...previous,
+          items: previous.items.map(u => (u.id === userId ? { ...u, is_active: !u.is_active } : u)),
+        }
+      }
+
+      await mutate(
+        adminAPI.toggleStatus(userId).then(() => undefined),
+        {
+          optimisticData,
+          populateCache: false,
+          rollbackOnError: true,
+          revalidate: true,
+        }
+      )
       toast.success('Status updated')
-    } catch {
-      toast.error('Failed')
+    } catch (err) {
+      toast.error(getApiErrorDetail(err) || 'Failed to update status')
     } finally {
       setUpdating(u => ({ ...u, [userId]: false }))
     }
-  }, [usersData, users, mutate])
+  }, [mutate])
 
   const createResetLink = useCallback(async (userId: number) => {
     const key = `reset-${userId}`

@@ -2,9 +2,10 @@ import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { Save, X } from 'lucide-react'
 import Spinner from '../shared/Spinner'
-import { OPTION_LETTERS, optionsFromQuestion } from './questionUtils'
+import { OPTION_LETTERS, optionsFromQuestion, validateQuestionInput } from './questionUtils'
 import { Button } from '@/components/ui/button'
 import { CustomSelect } from '@/components/ui/select'
+import { getApiErrorDetail } from '@/lib/apiError'
 import type { ChangeEvent, FormEvent, ReactElement } from 'react'
 import { isQuestionType } from './questionUtils'
 import type { AdminQuestion, QuestionFormState, QuestionType } from './questionUtils'
@@ -52,17 +53,24 @@ export default function QuestionEditForm({ question, onSave, onCancel }: Questio
     const marks = Number(form.marks)
     const negativeMarks = Number(form.negative_marks)
 
-    if (!form.question_text.trim()) { toast.error('Question text required'); return }
-    if (!isNAT && form.options.some(option => !option.trim())) { toast.error('Fill all 4 options'); return }
-    if (!form.correct_answer.trim()) { toast.error('Correct answer required'); return }
-    if (!Number.isFinite(marks) || marks <= 0) { toast.error('Marks must be greater than 0'); return }
-    if (!Number.isFinite(negativeMarks) || negativeMarks < 0) { toast.error('Negative marks cannot be below 0'); return }
+    const validationError = validateQuestionInput({
+      question_type: form.question_type,
+      question_text: form.question_text,
+      options: isNAT ? [] : form.options,
+      correct_answer: form.correct_answer,
+      marks,
+      negative_marks: negativeMarks,
+    })
+    if (validationError) {
+      toast.error(validationError)
+      return
+    }
 
     const payload = {
       ...form,
       question_text: form.question_text.trim(),
       options: isNAT ? [] : form.options.map(option => option.trim()),
-      correct_answer: form.correct_answer.trim().toUpperCase(),
+      correct_answer: isNAT ? form.correct_answer.trim() : form.correct_answer.trim().toUpperCase(),
       marks,
       negative_marks: (isMSQ || isNAT) ? 0 : negativeMarks,
       subject: form.subject.trim() || null,
@@ -74,19 +82,9 @@ export default function QuestionEditForm({ question, onSave, onCancel }: Questio
       await onSave(payload)
       toast.success('Question updated')
     } catch (err: unknown) {
-      toast.error(getErrorDetail(err) || 'Failed to update question')
+      toast.error(getApiErrorDetail(err) || 'Failed to update question')
     } finally {
       setSaving(false)
-    }
-
-    function getErrorDetail(error: unknown): string | undefined {
-      if (!error || typeof error !== 'object') return undefined
-      const response = 'response' in error && error.response
-      if (!response || typeof response !== 'object') return undefined
-      const data = 'data' in response && response.data
-      if (!data || typeof data !== 'object') return undefined
-      const detail = 'detail' in data ? data.detail : undefined
-      return typeof detail === 'string' ? detail : undefined
     }
   }
 
@@ -157,7 +155,7 @@ export default function QuestionEditForm({ question, onSave, onCancel }: Questio
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div>
           <label className="label">
-            {isNAT ? 'Answer' : isMSQ ? 'Correct (e.g. A,C)' : 'Correct (A/B/C/D)'}
+            {isNAT ? 'Answer (e.g. 42 or 41.5-42.5; comma separates answers, e.g. 1,5 = 1 or 5)' : isMSQ ? 'Correct (e.g. A,C)' : 'Correct (A/B/C/D)'}
           </label>
           <input
             className="input font-mono"

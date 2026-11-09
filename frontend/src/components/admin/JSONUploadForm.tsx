@@ -4,12 +4,11 @@ import { FileJson, Upload, X } from 'lucide-react'
 import Spinner from '../shared/Spinner'
 import { ALERT_STYLE } from '../shared/alertStyles'
 import type { ChangeEvent, ReactElement } from 'react'
-import { isQuestionType } from './questionUtils'
+import { isQuestionType, isValidNatAnswer } from './questionUtils'
 import type { QuestionType } from './questionUtils'
 import type { QuestionIn, QuestionsUploadResponse } from '@/types/api'
 
 const OPTION_LETTERS: ReadonlySet<string> = new Set(['A', 'B', 'C', 'D'])
-const NAT_ANSWER_PATTERN = /^-?\d+(\.\d+)?(\s*[-:]\s*-?\d+(\.\d+)?)?$/
 
 const SAMPLE_JSON = JSON.stringify({
   questions: [
@@ -74,7 +73,7 @@ const validateMsqAnswer = (answer: string, idx: number): void => {
 }
 
 const validateNatAnswer = (answer: string, idx: number): void => {
-  if (!NAT_ANSWER_PATTERN.test(answer)) {
+  if (!isValidNatAnswer(answer)) {
     throw new Error(`Question ${idx + 1} NAT correct_answer must be a number or range`)
   }
 }
@@ -387,7 +386,7 @@ export default function JSONUploadForm({ onAdd, onUploadFile, onClose }: JSONUpl
         Format: <span className="font-mono theme-muted">{"{ \"questions\": [ { question_type, question_text, options, correct_answer, marks, negative_marks } ] }"}</span>
         <br/>
         question_type: <span className="text-info-text">mcq</span> / <span className="text-warning-text">msq</span> / <span className="text-success-text">nat</span>
-        {' '} &middot; correct_answer: <span className="text-info-text">A</span> or <span className="text-warning-text">A,C</span> or <span className="text-success-text">42</span>
+        {' '} &middot; correct_answer: <span className="text-info-text">A</span> or <span className="text-warning-text">A,C</span> or <span className="text-success-text">42</span> (range: <span className="text-success-text">41.5-42.5</span>; note: comma separates answers, e.g. &quot;1,5&quot; means 1 or 5, not decimal 1.5)
       </div>
 
       <div>

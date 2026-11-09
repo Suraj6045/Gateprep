@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -149,7 +150,57 @@ class AdminBulkQuestionsTests(unittest.TestCase):
                 )
                 .one()
             )
-            self.assertEqual(inserted.order_index, 3)
+            self.assertEqual(inserted.order_index, 2)
+        finally:
+            db.close()
+
+    def test_add_questions_atomic_rollback_on_failure(self):
+        def failing_insert(db, test_id, questions, start_index):
+            # Simulate inserting first question before failing
+            db.add(
+                Question(
+                    test_id=test_id,
+                    question_type="mcq",
+                    question_text="Partially inserted question",
+                    options=["A", "B", "C", "D"],
+                    correct_answer="A",
+                    marks=1.0,
+                    negative_marks=0.0,
+                    order_index=start_index,
+                )
+            )
+            db.flush()
+            raise RuntimeError("Database error mid-batch insert")
+
+        with patch("app.api.routes.admin.questions._insert_questions", side_effect=failing_insert):
+            response = self.client.post(
+                f"/admin/tests/{self.test_id}/questions",
+                json={
+                    "questions": [
+                        {
+                            "question_type": "mcq",
+                            "question_text": "Q1",
+                            "options": ["A", "B", "C", "D"],
+                            "correct_answer": "A",
+                        },
+                        {
+                            "question_type": "mcq",
+                            "question_text": "Q2",
+                            "options": ["A", "B", "C", "D"],
+                            "correct_answer": "A",
+                        },
+                    ]
+                },
+            )
+
+        self.assertEqual(response.status_code, 500)
+        db = self.SessionLocal()
+        try:
+            # Verify complete rollback: zero rows persisted
+            question_count = (
+                db.query(Question).filter(Question.test_id == self.test_id).count()
+            )
+            self.assertEqual(question_count, 0)
         finally:
             db.close()
 

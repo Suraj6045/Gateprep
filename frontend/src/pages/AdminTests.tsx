@@ -347,12 +347,19 @@ export default function AdminTests() {
                     <h3 className="font-semibold text-sm leading-snug line-clamp-2" style={{ color: 'var(--text)' }}>
                       {t.title}
                     </h3>
-                    <Badge variant="outline" className={`flex-shrink-0 text-xs ${t.question_count > 0
-                      ? BADGE_COLORS.green
-                      : BADGE_COLORS.amber
-                    }`}>
-                      {t.question_count} Qs
-                    </Badge>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      {!t.is_published && (
+                        <Badge variant="outline" className={`text-xs ${BADGE_COLORS.amber}`}>
+                          Draft
+                        </Badge>
+                      )}
+                      <Badge variant="outline" className={`text-xs ${t.question_count > 0
+                        ? BADGE_COLORS.green
+                        : BADGE_COLORS.amber
+                      }`}>
+                        {t.question_count} Qs
+                      </Badge>
+                    </div>
                   </div>
 
                   <TestTag test={t} />

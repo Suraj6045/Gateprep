@@ -2,10 +2,11 @@ import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { X } from 'lucide-react'
 import Spinner from '../shared/Spinner'
-import { EMPTY_QUESTION, isQuestionType, OPTION_LETTERS } from './questionUtils'
+import { EMPTY_QUESTION, isQuestionType, OPTION_LETTERS, validateQuestionInput } from './questionUtils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { CustomSelect } from '@/components/ui/select'
+import { getApiErrorDetail } from '@/lib/apiError'
 import type { ChangeEvent, ReactElement } from 'react'
 import type { QuestionCreateFormState } from './questionUtils'
 import type { QuestionIn } from '@/types/api'
@@ -32,9 +33,18 @@ export default function QuestionForm({ onAdd, onClose }: QuestionFormProps): Rea
   }
 
   const submit = async () => {
-    if (!question.question_text.trim()) { toast.error('Question text required'); return }
-    if (!isNAT && question.options.some(option => !option.trim())) { toast.error('Fill all 4 options'); return }
-    if (!question.correct_answer.trim()) { toast.error('Correct answer required'); return }
+    const validationError = validateQuestionInput({
+      question_type: question.question_type,
+      question_text: question.question_text,
+      options: isNAT ? [] : question.options,
+      correct_answer: question.correct_answer,
+      marks: question.marks,
+      negative_marks: question.negative_marks,
+    })
+    if (validationError) {
+      toast.error(validationError)
+      return
+    }
 
     setLoading(true)
     try {
@@ -47,19 +57,9 @@ export default function QuestionForm({ onAdd, onClose }: QuestionFormProps): Rea
       setQuestion({ ...EMPTY_QUESTION, options: ['', '', '', ''] })
       toast.success('Question added')
     } catch (err: unknown) {
-      toast.error(getErrorDetail(err) || 'Failed')
+      toast.error(getApiErrorDetail(err) || 'Failed')
     } finally {
       setLoading(false)
-    }
-
-    function getErrorDetail(error: unknown): string | undefined {
-      if (!error || typeof error !== 'object') return undefined
-      const response = 'response' in error && error.response
-      if (!response || typeof response !== 'object') return undefined
-      const data = 'data' in response && response.data
-      if (!data || typeof data !== 'object') return undefined
-      const detail = 'detail' in data ? data.detail : undefined
-      return typeof detail === 'string' ? detail : undefined
     }
   }
 
@@ -151,7 +151,7 @@ export default function QuestionForm({ onAdd, onClose }: QuestionFormProps): Rea
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="label">
-            {isNAT ? 'Answer (e.g. 42 or 41.5-42.5)' : isMSQ ? 'Correct (e.g. A,C)' : 'Correct (A/B/C/D)'}
+            {isNAT ? 'Answer (e.g. 42 or 41.5-42.5; comma separates answers, e.g. 1,5 = 1 or 5)' : isMSQ ? 'Correct (e.g. A,C)' : 'Correct (A/B/C/D)'}
           </label>
           <input
             className="input font-mono"
