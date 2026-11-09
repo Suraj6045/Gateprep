@@ -1,16 +1,20 @@
 import { lazy, Suspense } from 'react'
+import { SWRConfig } from 'swr'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { ProtectedRoute, GuestRoute } from './components/shared/ProtectedRoute'
 import Spinner from './components/shared/Spinner'
-import AdminDashboard from './pages/AdminDashboard'
 import Dashboard from './pages/Dashboard'
 const LoginPage      = lazy(() => import('./pages/Login'))
 const RegisterPage   = lazy(() => import('./pages/Register'))
 const ForgotPassword   = lazy(() => import('./pages/ForgotPassword'))
 const ResetPassword    = lazy(() => import('./pages/ResetPassword'))
 const PendingPage      = lazy(() => import('./pages/Pending'))
+
+
+
+const AdminDashboard   = lazy(() => import('./pages/AdminDashboard'))
 
 
 
@@ -27,8 +31,15 @@ const MyResults        = lazy(() => import('./pages/MyResults'))
 const Leaderboard      = lazy(() => import('./pages/Leaderboard'))
 const Bookmarks        = lazy(() => import('./pages/Bookmarks'))
 
+// Stop SWR refetching every key on each tab focus (students switch tabs during
+// exams). Deliberately NOT raising dedupingInterval: AuthContext clears the SWR
+// cache on logout/session expiry but not SWR's dedupe markers, so a long
+// interval would leave a re-login within that window with no data fetched.
+const SWR_DEFAULTS = { revalidateOnFocus: false } as const
+
 export default function App() {
   return (
+    <SWRConfig value={SWR_DEFAULTS}>
     <ThemeProvider>
       <AuthProvider>
         <Suspense fallback={
@@ -67,5 +78,6 @@ export default function App() {
         </Suspense>
       </AuthProvider>
     </ThemeProvider>
+    </SWRConfig>
   )
 }

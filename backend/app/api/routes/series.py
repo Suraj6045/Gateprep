@@ -6,6 +6,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_optional_current_user, require_admin, require_aspirant
+from app.core.cache_utils import clear_catalog_cache_after_write
 from app.core.database import get_db
 from app.models.models import Question, Test, TestAttempt, TestSeries, TestStatus
 
@@ -219,7 +220,7 @@ def create_series(
     return s
 
 
-@router.delete("/{series_id}")
+@router.delete("/{series_id}", dependencies=[Depends(clear_catalog_cache_after_write)])
 def delete_series(
     series_id: int, db: Session = Depends(get_db), _=Depends(require_admin)
 ):

@@ -4,6 +4,7 @@ from datetime import datetime
 
 import pytest
 from fastapi.testclient import TestClient
+from fastapi_cache.backends.inmemory import InMemoryBackend
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -178,6 +179,9 @@ def test_detail_response_and_not_found(read_setup):
     test.test_type = "full_length"
     session.commit()
     expected["test_type"] = "full_length"
+    # GET /tests/{id} is cached; this edit bypasses the admin API (which
+    # invalidates), so drop the cached entry to observe the new DB state.
+    InMemoryBackend._store.clear()
     response = client.get(f"/tests/{test.id}", cookies=_cookies(owner, session))
     _assert_json(response, expected, set(expected))
 
